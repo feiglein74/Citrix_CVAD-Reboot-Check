@@ -1,3 +1,33 @@
+#Requires -Version 5.1
+<#
+.SYNOPSIS
+    Citrix Reboot Check Script - Überwacht Citrix Desktop-Gruppen und startet offline Maschinen
+
+.DESCRIPTION
+    Dieses Skript prüft konfigurierte Citrix Desktop Delivery Groups auf offline Maschinen
+    und initiiert automatisch deren Start. Alle Aktivitäten werden im Windows Event Log protokolliert.
+
+.PARAMETER Verbose
+    Zeigt detaillierte Ausgaben während der Ausführung
+
+.NOTES
+    Version:        2.0.0
+    Autor:          ACP Group AG
+    Erstelldatum:   2024-11-28
+    Änderungsdatum: 2025-11-10
+
+.LINK
+    Siehe CHANGELOG.md für detaillierte Versionshistorie
+#>
+
+[CmdletBinding()]
+param()
+
+# Skript-Version
+$ScriptVersion = "2.0.0"
+
+Write-Verbose "Citrix Reboot Check Script v$ScriptVersion wird gestartet..."
+
 # Citrix Snap-ins laden mit Fehlerbehandlung
 try {
     Add-PSSnapin "Citrix.*" -ErrorAction Stop
@@ -24,7 +54,7 @@ $Global:DESKTOPGROUP = @("DG-TS2019","DG-TS2016-Sage")
 try {
     $Global:EventLog = New-Object -type System.Diagnostics.Eventlog -argumentlist Application
     $Global:EventLog.Source = "Citrix Reboot Check Script"
-    $EventLog.WriteEntry("Starting scheduled task Citrix Post-Reboot Check Script.","Information","111")
+    $EventLog.WriteEntry("Starting scheduled task Citrix Post-Reboot Check Script v$ScriptVersion.","Information","111")
 }
 catch {
     Write-Warning "Event Log konnte nicht initialisiert werden: $_. Skript wird ohne Event Log-Unterstützung fortgesetzt."
@@ -162,7 +192,7 @@ foreach ($desktopgroup in $GLOBAL:DESKTOPGROUP)
 
 # Abschluss-Summary erstellen und loggen
 $summaryMsg = @"
-Citrix Reboot Check Script abgeschlossen.
+Citrix Reboot Check Script v$ScriptVersion abgeschlossen.
 Geprüfte Desktop-Gruppen: $($GLOBAL:DESKTOPGROUP.Count)
 Gesamt-Maschinen geprüft: $totalMachines
   - Online: $machinesOnline

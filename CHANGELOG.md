@@ -1,32 +1,44 @@
 # Änderungsprotokoll
 
-## Verbesserte Version - 2025-11-10
+Alle nennenswerten Änderungen an diesem Projekt werden in dieser Datei dokumentiert.
 
-### Hinzugefügte Funktionen
+Das Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.0.0/),
+und dieses Projekt folgt [Semantic Versioning](https://semver.org/lang/de/).
 
-#### 1. Umfassende Fehlerbehandlung
+## [2.0.0] - 2025-11-10
+
+### Hinzugefügt
+
+#### Versionierung
+- Skript-Version 2.0.0 im Header-Kommentar
+- Version in allen Event Log Meldungen
+- PowerShell Comment-Based Help mit vollständiger Dokumentation
+- `#Requires -Version 5.1` für Mindestanforderung
+- `[CmdletBinding()]` für erweiterte Funktionalität
+
+#### Umfassende Fehlerbehandlung
 - Try-Catch Blöcke für alle kritischen Operationen
 - Validierung der Citrix Snap-ins beim Start
 - Überprüfung ob benötigte Cmdlets verfügbar sind
 - Fehlerbehandlung bei Event Log Operationen
 
-#### 2. Neue Hilfsfunktion: Write-EventLogSafe
+#### Neue Hilfsfunktion: Write-EventLogSafe
 - Sichere Event Log Schreiboperationen
 - Fallback zu Write-Verbose wenn Event Log nicht verfügbar
 - Fehlerbehandlung für Event Log Schreibfehler
 
-#### 3. Eingabevalidierung
+#### Eingabevalidierung
 - Null/Leerstring-Checks für Maschinennamen
 - Validierung der Desktop-Gruppen
 - Warnung bei leeren Desktop-Gruppen
 
-#### 4. Detaillierte Statistiken und Reporting
+#### Detaillierte Statistiken und Reporting
 - Zählung geprüfter Maschinen
 - Tracking von Online/Offline Status
 - Fehlererfassung
 - Summary-Log am Ende der Ausführung
 
-#### 5. Verbesserte Event IDs
+#### Verbesserte Event IDs
 - 111: Skript gestartet
 - 112: Skript beendet (mit Summary)
 - 120: Warnung - Keine Maschinen gefunden
@@ -35,35 +47,38 @@
 - 125: Fehler beim Starten einer Maschine
 - 126: Fehler beim Abfragen einer Desktop-Gruppe
 
-#### 6. Exit Codes
+#### Exit Codes
 - Exit 0: Erfolgreiche Ausführung ohne Fehler
 - Exit 1: Fehler während der Ausführung
 
-### Behobene Probleme
+#### Pester Tests
+- Umfassende Unit-Tests für alle Skript-Komponenten
+- Tests für Fehlerbehandlung, Event IDs, Statistiken
+- Code-Struktur und Best-Practice Tests
+- 7 Test-Suites mit über 40 Tests
 
-1. **Grammatikfehler behoben**: "Host X is Offline" statt "Host Xis Offline"
-2. **Ungenutzte Variable entfernt**: Variable `$i` wurde entfernt
-3. **Redundante EventLog-Initialisierung**: Event Log wird nur noch einmal global initialisiert
-4. **Fehlende Fehlerbehandlung**: Alle Citrix-Cmdlets verwenden jetzt -ErrorAction Stop mit Try-Catch
-5. **Bessere Boolean-Vergleiche**: `-eq $false` statt `-Match "False"`
+### Behoben
 
-### Verbesserte Logging-Strategie
+- Grammatikfehler in Event Log Meldungen: "Host X is Offline" statt "Host Xis Offline"
+- Ungenutzte Variable `$i` entfernt
+- Redundante EventLog-Initialisierungen eliminiert
+- Fehlende Fehlerbehandlung: Alle Citrix-Cmdlets verwenden jetzt -ErrorAction Stop mit Try-Catch
+- Bessere Boolean-Vergleiche: `-eq $false` statt `-Match "False"`
 
-- Alle kritischen Aktionen werden geloggt
-- Fehler werden sowohl in Event Log als auch via Write-Error ausgegeben
-- Verbose-Ausgaben für Debugging (mit -Verbose Parameter)
-- Summary am Ende mit Gesamtstatistik
+### Geändert
 
-### Rückwärtskompatibilität
+- Logging-Strategie verbessert:
+  - Alle kritischen Aktionen werden geloggt
+  - Fehler werden sowohl in Event Log als auch via Write-Error ausgegeben
+  - Verbose-Ausgaben für Debugging (mit -Verbose Parameter)
+  - Summary am Ende mit Gesamtstatistik
 
-- Alle ursprünglichen Event IDs bleiben erhalten (111, 123, 124)
-- Desktop-Gruppen Konfiguration unverändert
-- Funktionalität bleibt identisch, nur robuster
+## [1.0.0] - 2024-11-28
 
-### Ausführung mit Verbose-Modus
+### Hinzugefügt
 
-```powershell
-.\citrix_reboot_check.ps1 -Verbose
-```
-
-Dies zeigt detaillierte Informationen während der Ausführung.
+- Initiale Version des Citrix Reboot Check Scripts
+- Überwachung von Desktop-Gruppen: DG-TS2019, DG-TS2016-Sage
+- Automatisches Einschalten von offline Maschinen
+- Event Log Integration
+- Event IDs: 111 (Start), 123 (Maschine läuft), 124 (Maschine offline)

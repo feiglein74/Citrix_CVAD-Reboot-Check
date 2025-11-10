@@ -10,6 +10,27 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Dieses Repository enthält ein einzelnes PowerShell-Skript, das Citrix Desktop Delivery Groups überwacht und automatisch Maschinen einschaltet, die offline sind. Das Skript läuft als geplante Aufgabe und protokolliert alle Aktionen im Windows-Anwendungsereignisprotokoll.
 
+**Aktuelle Version:** 2.0.0
+
+## Versionierung
+
+Das Projekt folgt [Semantic Versioning](https://semver.org/lang/de/) (MAJOR.MINOR.PATCH):
+- **MAJOR**: Breaking Changes (Inkompatible Änderungen)
+- **MINOR**: Neue Features (rückwärtskompatibel)
+- **PATCH**: Bug Fixes (rückwärtskompatibel)
+
+### Versionsnummer aktualisieren
+
+Bei Änderungen müssen folgende Stellen aktualisiert werden:
+1. `citrix_reboot_check.ps1:14` - Version im `.NOTES` Kommentar
+2. `citrix_reboot_check.ps1:27` - `$ScriptVersion` Variable
+3. `CHANGELOG.md` - Neuen Versions-Eintrag hinzufügen
+
+Verwende PowerShell's Get-Help zum Anzeigen der Version:
+```powershell
+Get-Help .\citrix_reboot_check.ps1 -Full
+```
+
 ## Zweck des Skripts
 
 Das `citrix_reboot_check.ps1` Skript:
@@ -33,6 +54,40 @@ Das `citrix_reboot_check.ps1` Skript:
 # Mit detaillierter Ausgabe (empfohlen für Debugging)
 .\citrix_reboot_check.ps1 -Verbose
 ```
+
+## Tests ausführen
+
+Das Projekt verwendet [Pester](https://pester.dev/) für Unit-Tests.
+
+### Pester installieren (falls nicht vorhanden)
+```powershell
+Install-Module -Name Pester -Force -SkipPublisherCheck
+```
+
+### Tests ausführen
+```powershell
+# Alle Tests ausführen
+Invoke-Pester
+
+# Tests mit detaillierter Ausgabe
+Invoke-Pester -Output Detailed
+
+# Nur bestimmte Tests ausführen
+Invoke-Pester -TagFilter "Fehlerbehandlung"
+
+# Code Coverage Report erstellen
+Invoke-Pester -CodeCoverage .\citrix_reboot_check.ps1
+```
+
+### Test-Kategorien
+
+Die Tests decken folgende Bereiche ab:
+- **Skript-Grundlagen**: Dateistruktur, PowerShell-Syntax, Comment-Based Help
+- **Funktionen**: Write-EventLogSafe, ScriptBlocks
+- **Event IDs**: Verwendung aller definierten Event IDs (111-126)
+- **Fehlerbehandlung**: Try-Catch Blöcke, Validierung, Exit Codes
+- **Statistiken**: Variablen-Initialisierung, Summary-Reporting
+- **Best Practices**: PowerShell Coding Standards
 
 ## Exit Codes
 

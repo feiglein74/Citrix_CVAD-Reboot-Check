@@ -1,7 +1,9 @@
 {
   "permissions": {
     "allow": [
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(git commit -m \"$(cat <<''EOF''\nCitrix Reboot Check Script umfassend verbessert\n\nVerbesserungen:\n- Umfassende Fehlerbehandlung mit Try-Catch Blöcken für alle kritischen Operationen\n- Validierung der Citrix Snap-ins und Cmdlets beim Start\n- Neue Hilfsfunktion Write-EventLogSafe für fehlertolerante Event Log Operationen\n- Eingabevalidierung (Null/Leerstring-Checks für Maschinennamen)\n- Detaillierte Statistiken und Summary-Reporting am Ende\n- Neue Event IDs (120, 125, 126) für Warnungen und Fehler\n- Exit Codes zur Statusübermittlung (0=Erfolg, 1=Fehler)\n\nBehobene Probleme:\n- Grammatikfehler in Event Log Meldungen behoben\n- Ungenutzte Variable $i entfernt\n- Redundante EventLog-Initialisierungen eliminiert\n- Bessere Boolean-Vergleiche (-eq statt -Match)\n\nNeue Dateien:\n- CLAUDE.md: Dokumentation für zukünftige Claude Code Instanzen\n- CHANGELOG.md: Detaillierte Dokumentation aller Änderungen\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")",
+      "Bash(pwsh:*)"
     ],
     "deny": [],
     "ask": []
