@@ -1,66 +1,185 @@
-Add-PSSnapin "Citrix.*" -ErrorAction SilentlyContinue
+# Citrix Snap-ins laden mit Fehlerbehandlung
+try {
+    Add-PSSnapin "Citrix.*" -ErrorAction Stop
+    Write-Verbose "Citrix Snap-ins erfolgreich geladen"
+}
+catch {
+    Write-Error "Fehler beim Laden der Citrix Snap-ins: $_"
+    exit 1
+}
 
-#clear 
+# Überprüfen ob benötigte Citrix Cmdlets verfügbar sind
+$requiredCmdlets = @('Get-BrokerDesktop', 'New-BrokerHostingPowerAction')
+foreach ($cmdlet in $requiredCmdlets) {
+    if (-not (Get-Command $cmdlet -ErrorAction SilentlyContinue)) {
+        Write-Error "Benötigtes Cmdlet '$cmdlet' nicht verfügbar. Bitte Citrix PowerShell Module installieren."
+        exit 1
+    }
+}
 
 # Festlegen der zu prüfenden Bereitstellungsgruppen
 $Global:DESKTOPGROUP = @("DG-TS2019","DG-TS2016-Sage")
 
+# Eventlog-Einträge vorbereiten mit Fehlerbehandlung
+try {
+    $Global:EventLog = New-Object -type System.Diagnostics.Eventlog -argumentlist Application
+    $Global:EventLog.Source = "Citrix Reboot Check Script"
+    $EventLog.WriteEntry("Starting scheduled task Citrix Post-Reboot Check Script.","Information","111")
+}
+catch {
+    Write-Warning "Event Log konnte nicht initialisiert werden: $_. Skript wird ohne Event Log-Unterstützung fortgesetzt."
+    $Global:EventLog = $null
+}
 
-# Eventlog-Einträge vorbereiten
-$Global:EventLog = New-Object -type System.Diagnostics.Eventlog -argumentlist Application
-$Global:EventLog.Source = "Citrix Reboot Check Script"
-$EventLog.WriteEntry("Starting scheduled task Citrix Post-Reboot Check Script.","Information","111")
+# Hilfsfunktion für Event Log Schreiben
+function Write-EventLogSafe {
+    param(
+        [string]$Message,
+        [string]$EntryType = "Information",
+        [string]$EventId = "100"
+    )
+
+    if ($Global:EventLog -ne $null) {
+        try {
+            $Global:EventLog.WriteEntry($Message, $EntryType, $EventId)
+        }
+        catch {
+            Write-Warning "Event Log Schreibfehler: $_"
+        }
+    }
+    Write-Verbose $Message
+}
 
 #Funktionsdefinitionen
-$FinalCheckDown = 
+$FinalCheckDown =
     {
         param ([string]$member)
 
-        $Global:EventLog = New-Object -type System.Diagnostics.Eventlog -argumentlist Application
-        $Global:EventLog.Source = "Citrix Reboot Check Script"
-        
+        if ([string]::IsNullOrWhiteSpace($member)) {
+            Write-Warning "Ungültiger Maschinenname übergeben"
+            return
+        }
+
         function FinalStart
         {
-            $EventLog.WriteEntry("Host " + $member + "is Offline. Start will be initiated!","Information","124")
-            New-BrokerHostingPowerAction -MachineName $member -Action TurnOn
+            param([string]$machineName)
+
+            $message = "Host $machineName is Offline. Start will be initiated!"
+            Write-EventLogSafe -Message $message -EventId "124"
+
+            try {
+                New-BrokerHostingPowerAction -MachineName $machineName -Action TurnOn -ErrorAction Stop
+                Write-Verbose "Power-On Aktion erfolgreich für $machineName"
+            }
+            catch {
+                $errorMsg = "Fehler beim Starten von ${machineName}: $_"
+                Write-EventLogSafe -Message $errorMsg -EntryType "Error" -EventId "125"
+                Write-Error $errorMsg
+            }
         }
 
         FinalStart $member
     }
 
-$FinalCheckOK = 
+$FinalCheckOK =
     {
         param ([string]$member)
 
-        $Global:EventLog = New-Object -type System.Diagnostics.Eventlog -argumentlist Application
-        $Global:EventLog.Source = "Citrix Reboot Check Script"
-        
+        if ([string]::IsNullOrWhiteSpace($member)) {
+            Write-Warning "Ungültiger Maschinenname übergeben"
+            return
+        }
+
         function FinalRunning
         {
-            $EventLog.WriteEntry("Host: " + $member + " is running.","Information","123")
+            param([string]$machineName)
+
+            $message = "Host: $machineName is running."
+            Write-EventLogSafe -Message $message -EventId "123"
         }
-        
+
         FinalRunning $member
     }
 
 
+# Statistik-Variablen initialisieren
+$totalMachines = 0
+$machinesOnline = 0
+$machinesOffline = 0
+$machinesStarted = 0
+$errors = 0
+
 # Schleife um alle Bereitstellungsgruppen abzuarbeiten
 foreach ($desktopgroup in $GLOBAL:DESKTOPGROUP)
 {
-    #Abfrage nach Workern in DG
-    $desktopgroupmember = @( Get-BrokerDesktop -DesktopGroupName $desktopgroup | where {$_.InMaintenanceMode -Match "False"} | sort-object -property MachineName )
-    
-    # Prüfung bzgl laufender VMs
-    $i=1
-    foreach ($member in $desktopgroupmember) 
-    {
-        if ($member.PowerState -match "Off") 
-        {
-            Invoke-Command -ScriptBlock $FinalCheckDown -ArgumentList $member.MachineName
+    Write-Verbose "Verarbeite Desktop-Gruppe: $desktopgroup"
+
+    try {
+        # Abfrage nach Workern in DG
+        $desktopgroupmember = @( Get-BrokerDesktop -DesktopGroupName $desktopgroup -ErrorAction Stop |
+                                 Where-Object {$_.InMaintenanceMode -eq $false} |
+                                 Sort-Object -Property MachineName )
+
+        if ($desktopgroupmember.Count -eq 0) {
+            $warnMsg = "Keine Maschinen in Desktop-Gruppe '$desktopgroup' gefunden (oder alle im Wartungsmodus)"
+            Write-Warning $warnMsg
+            Write-EventLogSafe -Message $warnMsg -EntryType "Warning" -EventId "120"
+            continue
         }
-        else
+
+        Write-Verbose "Gefundene Maschinen in ${desktopgroup}: $($desktopgroupmember.Count)"
+        $totalMachines += $desktopgroupmember.Count
+
+        # Prüfung bzgl laufender VMs
+        foreach ($member in $desktopgroupmember)
         {
-            Invoke-Command -ScriptBlock $FinalCheckOK -ArgumentList $member.MachineName
+            if ($member.PowerState -match "Off")
+            {
+                $machinesOffline++
+                try {
+                    Invoke-Command -ScriptBlock $FinalCheckDown -ArgumentList $member.MachineName
+                    $machinesStarted++
+                }
+                catch {
+                    $errors++
+                    Write-Error "Fehler beim Verarbeiten von $($member.MachineName): $_"
+                }
+            }
+            else
+            {
+                $machinesOnline++
+                Invoke-Command -ScriptBlock $FinalCheckOK -ArgumentList $member.MachineName
+            }
         }
     }
+    catch {
+        $errors++
+        $errorMsg = "Fehler beim Abfragen der Desktop-Gruppe '${desktopgroup}': $_"
+        Write-Error $errorMsg
+        Write-EventLogSafe -Message $errorMsg -EntryType "Error" -EventId "126"
+    }
+}
+
+# Abschluss-Summary erstellen und loggen
+$summaryMsg = @"
+Citrix Reboot Check Script abgeschlossen.
+Geprüfte Desktop-Gruppen: $($GLOBAL:DESKTOPGROUP.Count)
+Gesamt-Maschinen geprüft: $totalMachines
+  - Online: $machinesOnline
+  - Offline (Start initiiert): $machinesOffline
+  - Erfolgreich gestartet: $machinesStarted
+  - Fehler: $errors
+"@
+
+Write-Verbose $summaryMsg
+Write-EventLogSafe -Message $summaryMsg -EventId "112"
+
+# Exit Code basierend auf Ergebnissen
+if ($errors -gt 0) {
+    Write-Warning "Skript mit $errors Fehler(n) beendet"
+    exit 1
+}
+else {
+    Write-Verbose "Skript erfolgreich beendet"
+    exit 0
 } 
