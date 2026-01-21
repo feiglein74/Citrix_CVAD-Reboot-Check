@@ -1,0 +1,30 @@
+# Default: Auto-Erkennung
+* text=auto
+
+# Explizit Text (LF im Repo, native Zeilenenden beim Checkout)
+*.md text
+*.txt text
+*.json text
+*.yml text
+*.yaml text
+*.xml text
+
+# PowerShell
+*.ps1 text
+*.psm1 text
+*.psd1 text
+
+# Shell-Skripte (immer LF)
+*.sh text eol=lf
+*.bash text eol=lf
+
+# Binärdateien (keine Konvertierung)
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.pdf binary
+*.zip binary
+*.exe binary
+*.dll binary

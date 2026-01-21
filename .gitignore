@@ -1,0 +1,19 @@
+# Claude Code (projekt-spezifischer Kontext, nicht für andere relevant)
+.claude/
+CLAUDE.md
+
+# Build-Artefakte
+*.zip
+
+# PowerShell
+*.psm1.bak
+*.psd1.bak
+
+# Windows
+Thumbs.db
+Desktop.ini
+
+# Temporäre Dateien
+*.tmp
+*.temp
+*~
