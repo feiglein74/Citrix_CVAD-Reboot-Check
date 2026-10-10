@@ -25,7 +25,7 @@ Gesamtbewertung: 7/10
 
 ### Sprach-Verstöße
 
-- [ ] **Log-Meldungen auf Deutsch umstellen** (Zeilen 97, 127, 57)
+- [x] ~~**Log-Meldungen auf Deutsch umstellen**~~ – verworfen (2026-10-10): Event-Log-Meldungen bleiben bewusst auf Englisch
   - Aktuell (Englisch):
     - `"Host $machineName is Offline. Start will be initiated!"`
     - `"Host: $machineName is running."`
