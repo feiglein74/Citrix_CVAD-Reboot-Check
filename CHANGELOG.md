@@ -5,6 +5,21 @@ Alle nennenswerten Änderungen an diesem Projekt werden in dieser Datei dokument
 Das Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.0.0/),
 und dieses Projekt folgt [Semantic Versioning](https://semver.org/lang/de/).
 
+## [3.1.0] - 2026-10-10
+
+### Geändert
+- ScriptBlocks `$FinalCheckDown`/`$FinalCheckOK` durch Funktionen ersetzt:
+  `Initialize-CitrixEnvironment`, `Initialize-EventLog`, `Start-OfflineMachine`,
+  `Write-MachineRunning`, `Invoke-CitrixRebootCheck`
+- `Invoke-Command` für lokale ScriptBlocks entfällt
+- `$Global:EventLog` durch `$script:EventLog` ersetzt (keine globalen Variablen mehr)
+- Hauptprogramm wird beim Dot-Sourcing übersprungen (Voraussetzung für Mock-Tests)
+- Summary wird bei `-Verbose` nur noch einmal statt doppelt ausgegeben
+
+### Behoben
+- Skriptdateien als UTF-8 mit BOM gespeichert. Ohne BOM las Windows PowerShell 5.1 die Datei
+  als ANSI, wodurch Umlaute in Ausgaben und Event-Log-Meldungen verstümmelt wurden (seit 2.0.0)
+
 ## [3.0.0] - 2026-10-10
 
 ### Geändert (Breaking)

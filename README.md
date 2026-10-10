@@ -12,7 +12,7 @@ Every action is logged to the Windows **Application** event log (source
 Run with `-Verbose` (example with one configured Delivery Group, placeholder machine names):
 
 ```text
-VERBOSE: Citrix Reboot Check Script v3.0.0 wird gestartet...
+VERBOSE: Citrix Reboot Check Script v3.1.0 wird gestartet...
 VERBOSE: Citrix Snap-ins erfolgreich geladen
 VERBOSE: Verarbeite Desktop-Gruppe: DG-Example
 VERBOSE: Gefundene Maschinen in DG-Example: 3
@@ -20,7 +20,7 @@ VERBOSE: Host: VDA01 is running.
 VERBOSE: Host VDA02 is Offline. Start will be initiated!
 VERBOSE: Power-On Aktion erfolgreich für VDA02
 VERBOSE: Host: VDA03 is running.
-VERBOSE: Citrix Reboot Check Script v3.0.0 abgeschlossen.
+VERBOSE: Citrix Reboot Check Script v3.1.0 abgeschlossen.
 Geprüfte Desktop-Gruppen: 1
 Gesamt-Maschinen geprüft: 3
   - Online: 2
@@ -64,7 +64,7 @@ License: [MIT](LICENSE)
 
 Überwacht Citrix Desktop Delivery Groups und startet automatisch offline Maschinen.
 
-**Version:** 3.0.0
+**Version:** 3.1.0
 
 ## Übersicht
 
@@ -132,14 +132,21 @@ powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass -Command "& 'C
 
 ## Architektur
 
-Das Skript verwendet ein sequentielles Verarbeitungsmodell:
+Das Skript besteht aus Funktionen und einem kurzen Hauptprogramm:
 
-1. **Initialisierung**: Lädt Citrix Snap-ins und bereitet Ereignisprotokoll-Quelle vor
-2. **Desktop Group Iteration**: Verarbeitet jede konfigurierte Desktop-Gruppe nacheinander
-3. **Maschinenzustandsprüfung**: Fragt Maschinen ab, die nicht im Wartungsmodus sind
-4. **Betriebszustandsbehandlung**:
-   - `$FinalCheckDown`: Wird für Offline-Maschinen aufgerufen, löst Einschaltaktion aus
-   - `$FinalCheckOK`: Wird für laufende Maschinen aufgerufen, protokolliert Status
+| Funktion | Aufgabe |
+|----------|---------|
+| `Initialize-CitrixEnvironment` | Lädt Citrix Snap-ins und prüft die benötigten Cmdlets |
+| `Initialize-EventLog` | Bereitet das Event Log vor und schreibt Event 111 |
+| `Write-EventLogSafe` | Schreibt ins Event Log (falls verfügbar) und nach Verbose |
+| `Invoke-CitrixRebootCheck` | Prüft alle Desktop-Gruppen (ohne Wartungsmodus), zählt Statistik, liefert Exit Code |
+| `Start-OfflineMachine` | Startet eine offline Maschine, liefert `$true`/`$false` |
+| `Write-MachineRunning` | Protokolliert eine laufende Maschine |
+
+Das Hauptprogramm am Ende läuft nur bei direktem Aufruf. Beim Dot-Sourcing
+(`. .\citrix_reboot_check.ps1 -DesktopGroup x`, z.B. in Tests) werden nur die Funktionen geladen.
+
+Die Skriptdatei ist als UTF-8 **mit BOM** gespeichert, damit Windows PowerShell 5.1 die Umlaute korrekt liest.
 
 ## Tests
 

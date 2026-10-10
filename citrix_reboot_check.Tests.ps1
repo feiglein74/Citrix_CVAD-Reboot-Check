@@ -1,4 +1,4 @@
-#Requires -Version 5.1
+﻿#Requires -Version 5.1
 #Requires -Modules Pester
 
 <#
@@ -95,27 +95,8 @@ Describe "citrix_reboot_check.ps1 - Funktionen" {
     Context "Write-EventLogSafe Funktion" {
 
         BeforeAll {
-            # Funktion aus dem Skript extrahieren und definieren
-            $scriptContent = Get-Content $scriptPath -Raw
-
-            # Write-EventLogSafe Funktion für Tests definieren
-            function Write-EventLogSafe {
-                param(
-                    [string]$Message,
-                    [string]$EntryType = "Information",
-                    [string]$EventId = "100"
-                )
-
-                if ($Global:EventLog -ne $null) {
-                    try {
-                        $Global:EventLog.WriteEntry($Message, $EntryType, $EventId)
-                    }
-                    catch {
-                        Write-Warning "Event Log Schreibfehler: $_"
-                    }
-                }
-                Write-Verbose $Message
-            }
+            # Skript dot-sourcen: lädt nur die Funktionen, Hauptprogramm läuft nicht
+            . $scriptPath -DesktopGroup 'DG-Test'
         }
 
         It "Funktion existiert im Skript" {
@@ -138,26 +119,46 @@ Describe "citrix_reboot_check.ps1 - Funktionen" {
         }
     }
 
-    Context "ScriptBlocks - FinalCheckDown und FinalCheckOK" {
+    Context "Funktionsstruktur" {
 
-        It "FinalCheckDown ScriptBlock existiert" {
-            $content = Get-Content $scriptPath -Raw
-            $content | Should -Match '\$FinalCheckDown\s*='
+        BeforeAll {
+            . $scriptPath -DesktopGroup 'DG-Test'
         }
 
-        It "FinalCheckOK ScriptBlock existiert" {
-            $content = Get-Content $scriptPath -Raw
-            $content | Should -Match '\$FinalCheckOK\s*='
+        It "Definiert Funktion <_>" -ForEach @(
+            'Initialize-CitrixEnvironment'
+            'Initialize-EventLog'
+            'Start-OfflineMachine'
+            'Write-MachineRunning'
+            'Invoke-CitrixRebootCheck'
+        ) {
+            Get-Command $_ -CommandType Function -ErrorAction SilentlyContinue | Should -Not -BeNullOrEmpty
         }
 
-        It "FinalCheckDown enthält Null-Check" {
+        It "Verwendet keine ScriptBlocks und kein Invoke-Command mehr" {
+            $content = Get-Content $scriptPath -Raw
+            $content | Should -Not -Match '\$FinalCheck(Down|OK)'
+            $content | Should -Not -Match 'Invoke-Command'
+        }
+
+        It "Verwendet keine globalen Variablen" {
+            $content = Get-Content $scriptPath -Raw
+            $content | Should -Not -Match '\$Global:'
+        }
+
+        It "Start-OfflineMachine enthält Null-Check" {
             $content = Get-Content $scriptPath -Raw
             $content | Should -Match '\[string\]::IsNullOrWhiteSpace'
         }
 
-        It "FinalCheckDown ruft New-BrokerHostingPowerAction auf" {
+        It "Start-OfflineMachine ruft New-BrokerHostingPowerAction auf" {
             $content = Get-Content $scriptPath -Raw
             $content | Should -Match 'New-BrokerHostingPowerAction.*-Action TurnOn'
+        }
+
+        It "Hauptprogramm wird beim Dot-Sourcing übersprungen" {
+            $content = Get-Content $scriptPath -Raw
+            $content | Should -Match "if \(\`$MyInvocation\.InvocationName -ne '\.'\)"
         }
     }
 }
@@ -235,7 +236,7 @@ Describe "citrix_reboot_check.ps1 - Fehlerbehandlung" {
 
         It "Validiert Maschinennamen auf Null/Leer" {
             $content = Get-Content $scriptPath -Raw
-            $content | Should -Match '\[string\]::IsNullOrWhiteSpace\(\$member\)'
+            $content | Should -Match '\[string\]::IsNullOrWhiteSpace\(\$MachineName\)'
         }
     }
 
@@ -246,9 +247,10 @@ Describe "citrix_reboot_check.ps1 - Fehlerbehandlung" {
             $content | Should -Match 'exit 1'
         }
 
-        It "Verwendet exit 0 bei Erfolg" {
+        It "Liefert 0 bei Erfolg und reicht den Code an exit weiter" {
             $content = Get-Content $scriptPath -Raw
-            $content | Should -Match 'exit 0'
+            $content | Should -Match 'return 0'
+            $content | Should -Match 'exit \(Invoke-CitrixRebootCheck'
         }
     }
 }
@@ -343,7 +345,7 @@ Describe "citrix_reboot_check.ps1 - Best Practices" {
 
     Context "Start-Ergebnis" {
 
-        It "FinalStart liefert Erfolg/Misserfolg zurück" {
+        It "Start-OfflineMachine liefert Erfolg/Misserfolg zurück" {
             $content = Get-Content $scriptPath -Raw
             $content | Should -Match 'return \$true'
             $content | Should -Match 'return \$false'

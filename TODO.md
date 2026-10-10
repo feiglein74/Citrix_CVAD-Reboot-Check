@@ -1,7 +1,7 @@
 # TODO - Verbesserungen für Citrix-RebootCheck
 
 Dokumentiert am: 2026-01-21
-Aktuelle Version: 3.0.0
+Aktuelle Version: 3.1.0
 Gesamtbewertung: 7/10
 
 ---
@@ -77,7 +77,7 @@ Gesamtbewertung: 7/10
     }
     ```
 
-- [ ] **ScriptBlocks durch reguläre Funktionen ersetzen** (Zeilen 84-132)
+- [x] **ScriptBlocks durch reguläre Funktionen ersetzen** ✅ (3.1.0)
   - Aktuell: Verschachtelte Funktionen in ScriptBlocks
   - Besser: Direkte Funktionen mit CmdletBinding
   - Vorteile: Bessere Testbarkeit, klarere Struktur
@@ -90,12 +90,12 @@ Gesamtbewertung: 7/10
     }
     ```
 
-- [ ] **Globale Variablen entfernen** (Zeilen 55-56)
-  - Betrifft: `$Global:EventLog` (`$Global:DESKTOPGROUP` in 3.0.0 durch Parameter ersetzt ✅)
+- [x] **Globale Variablen entfernen** ✅ (3.0.0 Parameter, 3.1.0 `$script:EventLog`)
+  - Betrifft: `$Global:EventLog`, `$Global:DESKTOPGROUP`
   - Besser: `$script:` Scope oder Parameter
   - Grund: Vermeidung von Scope-Verschmutzung
 
-- [ ] **Invoke-Command Overhead entfernen** (Zeilen 170, 181)
+- [x] **Invoke-Command Overhead entfernen** ✅ (3.1.0)
   - Aktuell: `Invoke-Command -ScriptBlock $FinalCheckDown`
   - Besser: `& $FinalCheckDown` oder direkte Funktionsaufrufe
   - Grund: Invoke-Command für lokale ScriptBlocks ist unnötig
