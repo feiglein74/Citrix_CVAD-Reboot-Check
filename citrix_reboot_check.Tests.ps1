@@ -79,8 +79,8 @@ Describe "citrix_reboot_check.ps1 - Skript-Grundlagen" {
 
         It "Desktop-Gruppen enthalten erwartete Werte" {
             $content = Get-Content $scriptPath -Raw
-            $content | Should -Match 'DG-TS2019'
-            $content | Should -Match 'DG-TS2016-Sage'
+            $content | Should -Match 'DG-Example1'
+            $content | Should -Match 'DG-Example2'
         }
     }
 }

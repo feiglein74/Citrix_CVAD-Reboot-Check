@@ -74,7 +74,7 @@ Dieses Repository enthält ein PowerShell-Skript, das Citrix Desktop Delivery Gr
 
 ## Funktionen
 
-- Überwacht spezifische Citrix Desktop Delivery Groups (DG-TS2019, DG-TS2016-Sage)
+- Überwacht spezifische Citrix Desktop Delivery Groups (DG-Example1, DG-Example2)
 - Prüft den Betriebszustand aller Maschinen, die sich nicht im Wartungsmodus befinden
 - Initiiert automatisch eine Einschaltaktion für Maschinen, die offline sind
 - Protokolliert alle Aktivitäten im Windows-Ereignisprotokoll unter der Quelle "Citrix Reboot Check Script"
@@ -109,7 +109,7 @@ Dieses Repository enthält ein PowerShell-Skript, das Citrix Desktop Delivery Gr
 Zu überwachende Desktop-Gruppen sind in `$Global:DESKTOPGROUP` bei `citrix_reboot_check.ps1:51` definiert:
 
 ```powershell
-$Global:DESKTOPGROUP = @("DG-TS2019","DG-TS2016-Sage")
+$Global:DESKTOPGROUP = @("DG-Example1","DG-Example2")
 ```
 
 ## Event-IDs

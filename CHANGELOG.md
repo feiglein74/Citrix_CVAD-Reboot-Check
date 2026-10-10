@@ -98,7 +98,7 @@ und dieses Projekt folgt [Semantic Versioning](https://semver.org/lang/de/).
 ### Hinzugefügt
 
 - Initiale Version des Citrix Reboot Check Scripts
-- Überwachung von Desktop-Gruppen: DG-TS2019, DG-TS2016-Sage
+- Überwachung von Desktop-Gruppen: DG-Example1, DG-Example2
 - Automatisches Einschalten von offline Maschinen
 - Event Log Integration
 - Event IDs: 111 (Start), 123 (Maschine läuft), 124 (Maschine offline)

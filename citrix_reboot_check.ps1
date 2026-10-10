@@ -48,7 +48,7 @@ foreach ($cmdlet in $requiredCmdlets) {
 }
 
 # Festlegen der zu prüfenden Bereitstellungsgruppen
-$Global:DESKTOPGROUP = @("DG-TS2019","DG-TS2016-Sage")
+$Global:DESKTOPGROUP = @("DG-Example1","DG-Example2")
 
 # Eventlog-Einträge vorbereiten mit Fehlerbehandlung
 try {
