@@ -17,6 +17,10 @@ und dieses Projekt folgt [Semantic Versioning](https://semver.org/lang/de/).
 - Event IDs als `[int]` statt als String
 - `$null`-Vergleich auf die linke Seite verschoben (PowerShell Best Practice)
 
+### Dokumentation
+- MIT-Lizenz (LICENSE) hinzugefügt
+- Englischer README-Kopf mit Beispielausgabe und Quickstart (inkl. geplanter Aufgabe)
+
 ### Tests
 - Event-ID-Tests an Integer-Format angepasst
 - Neue Tests für PowerState-Vergleich, `$null`-Vergleich und Start-Ergebnis

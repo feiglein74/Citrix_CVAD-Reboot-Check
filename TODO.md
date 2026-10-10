@@ -16,9 +16,8 @@ Gesamtbewertung: 7/10
 - [x] **.gitattributes erstellen** ✅
   - Erledigt: 2026-01-21
 
-- [ ] **LICENSE erstellen**
-  - Status: ❌ Fehlt komplett
-  - Empfehlung: Lizenztyp mit User klären (MIT, Apache 2.0, proprietary?)
+- [x] **LICENSE erstellen** ✅
+  - Erledigt: 2026-10-10 (MIT)
 
 - [ ] **DESIGN-PRINCIPLES.md erstellen**
   - Status: ❌ Fehlt komplett
