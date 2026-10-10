@@ -115,8 +115,8 @@ Gesamtbewertung: 7/10
 
 ### Priorität 3 - Hoch (Aufwändige Verbesserungen)
 
-- [ ] **Pester-Tests mit echtem Mocking erweitern**
-  - Aktuell: Nur statische Pattern-Checks auf Code-Text
+- [x] **Pester-Tests mit echtem Mocking erweitern** ✅ (3.1.0, 73 Tests, ca. 92 % Coverage)
+  - Vorher: Nur statische Pattern-Checks auf Code-Text
   - Besser: Echte Unit-Tests mit Mock-Objekten
   - Beispiel:
     ```powershell

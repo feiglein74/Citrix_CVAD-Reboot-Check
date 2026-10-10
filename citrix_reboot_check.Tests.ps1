@@ -362,3 +362,245 @@ Describe "citrix_reboot_check.ps1 - Best Practices" {
         }
     }
 }
+
+Describe "citrix_reboot_check.ps1 - Verhalten (Mock-Tests)" {
+
+    BeforeAll {
+        # Skript dot-sourcen: lädt nur die Funktionen, Hauptprogramm läuft nicht
+        . $scriptPath -DesktopGroup 'DG-Test'
+
+        # Platzhalter für Citrix-Cmdlets, damit Pester sie mocken kann
+        function Get-BrokerDesktop { param($DesktopGroupName) }
+        function New-BrokerHostingPowerAction { param($MachineName, $Action) }
+
+        function New-TestMachine {
+            param([string]$Name, [string]$PowerState, [bool]$Maintenance = $false)
+            [PSCustomObject]@{ MachineName = $Name; PowerState = $PowerState; InMaintenanceMode = $Maintenance }
+        }
+    }
+
+    Context "Write-EventLogSafe" {
+
+        AfterEach {
+            $script:EventLog = $null
+        }
+
+        It "Schreibt Meldung, Typ und Event ID ins Event Log" {
+            $script:written = [System.Collections.Generic.List[object]]::new()
+            $script:EventLog = [PSCustomObject]@{} | Add-Member -MemberType ScriptMethod -Name WriteEntry -Value {
+                param($Message, $EntryType, $EventId)
+                $script:written.Add([PSCustomObject]@{ Message = $Message; EntryType = $EntryType; EventId = $EventId })
+            } -PassThru
+
+            Write-EventLogSafe -Message "Test" -EntryType "Warning" -EventId 120
+
+            $script:written.Count | Should -Be 1
+            $script:written[0].Message | Should -Be "Test"
+            $script:written[0].EntryType | Should -Be "Warning"
+            $script:written[0].EventId | Should -Be 120
+        }
+
+        It "Wirft nicht, wenn kein Event Log verfügbar ist" {
+            $script:EventLog = $null
+            { Write-EventLogSafe -Message "Test" } | Should -Not -Throw
+        }
+
+        It "Gibt bei Schreibfehler eine Warnung aus statt abzubrechen" {
+            $script:EventLog = [PSCustomObject]@{} | Add-Member -MemberType ScriptMethod -Name WriteEntry -Value {
+                throw "Zugriff verweigert"
+            } -PassThru
+
+            Write-EventLogSafe -Message "Test" -WarningVariable warn -WarningAction SilentlyContinue
+            $warn | Should -Match "Event Log Schreibfehler"
+        }
+    }
+
+    Context "Initialize-CitrixEnvironment" {
+
+        It "Liefert `$true, wenn Snap-ins und Cmdlets verfügbar sind" {
+            Mock Add-PSSnapin { }
+            Initialize-CitrixEnvironment | Should -BeTrue
+        }
+
+        It "Liefert `$false, wenn die Snap-ins nicht geladen werden können" {
+            Mock Add-PSSnapin { throw "Snap-in nicht gefunden" }
+            Initialize-CitrixEnvironment -ErrorAction SilentlyContinue | Should -BeFalse
+        }
+
+        It "Liefert `$false, wenn ein benötigtes Cmdlet fehlt" {
+            Mock Add-PSSnapin { }
+            Mock Get-Command { $null } -ParameterFilter { $Name -eq 'New-BrokerHostingPowerAction' }
+            Initialize-CitrixEnvironment -ErrorAction SilentlyContinue | Should -BeFalse
+        }
+    }
+
+    Context "Initialize-EventLog" {
+
+        AfterEach {
+            $script:EventLog = $null
+        }
+
+        It "Setzt die Quelle und schreibt Event 111" {
+            $script:written = [System.Collections.Generic.List[object]]::new()
+            Mock New-Object {
+                [PSCustomObject]@{ Source = $null } | Add-Member -MemberType ScriptMethod -Name WriteEntry -Value {
+                    param($Message, $EntryType, $EventId)
+                    $script:written.Add([PSCustomObject]@{ Message = $Message; EventId = $EventId })
+                } -PassThru
+            } -ParameterFilter { $TypeName -eq 'System.Diagnostics.EventLog' }
+
+            Initialize-EventLog
+
+            $script:EventLog.Source | Should -Be "Citrix Reboot Check Script"
+            $script:written.Count | Should -Be 1
+            $script:written[0].EventId | Should -Be 111
+        }
+
+        It "Läuft ohne Event Log weiter, wenn die Initialisierung fehlschlägt" {
+            Mock New-Object { throw "Quelle nicht registriert" } -ParameterFilter { $TypeName -eq 'System.Diagnostics.EventLog' }
+
+            { Initialize-EventLog -WarningAction SilentlyContinue } | Should -Not -Throw
+            Initialize-EventLog -WarningVariable warn -WarningAction SilentlyContinue
+            $warn | Should -Match "Event Log konnte nicht initialisiert werden"
+            $script:EventLog | Should -BeNullOrEmpty
+        }
+    }
+
+    Context "Start-OfflineMachine" {
+
+        BeforeEach {
+            Mock Write-EventLogSafe { }
+        }
+
+        It "Startet die Maschine und liefert `$true" {
+            Mock New-BrokerHostingPowerAction { [PSCustomObject]@{ Uid = 1 } }
+
+            $result = Start-OfflineMachine -MachineName 'VDA01'
+
+            $result | Should -BeExactly $true
+            Should -Invoke New-BrokerHostingPowerAction -Times 1 -Exactly -ParameterFilter {
+                $MachineName -eq 'VDA01' -and $Action -eq 'TurnOn'
+            }
+            Should -Invoke Write-EventLogSafe -Times 1 -Exactly -ParameterFilter { $EventId -eq 124 }
+        }
+
+        It "Liefert `$false und loggt Event 125, wenn der Start fehlschlägt" {
+            Mock New-BrokerHostingPowerAction { throw "Hypervisor nicht erreichbar" }
+
+            $result = Start-OfflineMachine -MachineName 'VDA01' -ErrorAction SilentlyContinue
+
+            $result | Should -BeExactly $false
+            Should -Invoke Write-EventLogSafe -Times 1 -Exactly -ParameterFilter {
+                $EventId -eq 125 -and $EntryType -eq 'Error' -and $Message -match 'Hypervisor nicht erreichbar'
+            }
+        }
+
+        It "Liefert `$false ohne Startversuch bei leerem Maschinennamen" {
+            Mock New-BrokerHostingPowerAction { }
+
+            Start-OfflineMachine -MachineName ' ' -WarningAction SilentlyContinue | Should -BeExactly $false
+            Should -Invoke New-BrokerHostingPowerAction -Times 0 -Exactly
+        }
+    }
+
+    Context "Write-MachineRunning" {
+
+        It "Loggt Event 123 für eine laufende Maschine" {
+            Mock Write-EventLogSafe { }
+
+            Write-MachineRunning -MachineName 'VDA01'
+
+            Should -Invoke Write-EventLogSafe -Times 1 -Exactly -ParameterFilter {
+                $EventId -eq 123 -and $Message -match 'VDA01'
+            }
+        }
+
+        It "Loggt nichts bei leerem Maschinennamen" {
+            Mock Write-EventLogSafe { }
+
+            Write-MachineRunning -MachineName '' -WarningAction SilentlyContinue
+
+            Should -Invoke Write-EventLogSafe -Times 0 -Exactly
+        }
+    }
+
+    Context "Invoke-CitrixRebootCheck" {
+
+        BeforeEach {
+            Mock Write-EventLogSafe { }
+            Mock New-BrokerHostingPowerAction { }
+            Mock Get-BrokerDesktop {
+                New-TestMachine 'VDA-On'          'On'
+                New-TestMachine 'VDA-Off'         'Off'
+                New-TestMachine 'VDA-TurningOff'  'TurningOff'
+                New-TestMachine 'VDA-Maintenance' 'Off' $true
+            } -ParameterFilter { $DesktopGroupName -eq 'DG-A' }
+            Mock Get-BrokerDesktop { } -ParameterFilter { $DesktopGroupName -eq 'DG-Leer' }
+            Mock Get-BrokerDesktop { throw "Gruppe nicht gefunden" } -ParameterFilter { $DesktopGroupName -eq 'DG-Fehler' }
+        }
+
+        It "Startet nur offline Maschinen außerhalb des Wartungsmodus und liefert 0" {
+            $result = Invoke-CitrixRebootCheck -DesktopGroup 'DG-A'
+
+            $result | Should -Be 0
+            Should -Invoke New-BrokerHostingPowerAction -Times 2 -Exactly
+            Should -Invoke New-BrokerHostingPowerAction -Times 1 -Exactly -ParameterFilter { $MachineName -eq 'VDA-Off' }
+            Should -Invoke New-BrokerHostingPowerAction -Times 1 -Exactly -ParameterFilter { $MachineName -eq 'VDA-TurningOff' }
+            Should -Invoke New-BrokerHostingPowerAction -Times 0 -Exactly -ParameterFilter { $MachineName -in 'VDA-On', 'VDA-Maintenance' }
+        }
+
+        It "Loggt laufende Maschinen mit Event 123" {
+            Invoke-CitrixRebootCheck -DesktopGroup 'DG-A' | Out-Null
+
+            Should -Invoke Write-EventLogSafe -Times 1 -Exactly -ParameterFilter { $EventId -eq 123 -and $Message -match 'VDA-On' }
+        }
+
+        It "Schreibt Summary (Event 112) mit korrekten Zahlen" {
+            Invoke-CitrixRebootCheck -DesktopGroup 'DG-A' | Out-Null
+
+            Should -Invoke Write-EventLogSafe -Times 1 -Exactly -ParameterFilter {
+                $EventId -eq 112 -and
+                $Message -match 'Gesamt-Maschinen geprüft: 3' -and
+                $Message -match 'Online: 1' -and
+                $Message -match 'Offline \(Start initiiert\): 2' -and
+                $Message -match 'Erfolgreich gestartet: 2' -and
+                $Message -match 'Fehler: 0'
+            }
+        }
+
+        It "Liefert 1, wenn ein Start fehlschlägt, und startet die übrigen Maschinen trotzdem" {
+            Mock New-BrokerHostingPowerAction { throw "Hypervisor nicht erreichbar" } -ParameterFilter { $MachineName -eq 'VDA-Off' }
+
+            $result = Invoke-CitrixRebootCheck -DesktopGroup 'DG-A' -ErrorAction SilentlyContinue -WarningAction SilentlyContinue
+
+            $result | Should -Be 1
+            Should -Invoke New-BrokerHostingPowerAction -Times 1 -Exactly -ParameterFilter { $MachineName -eq 'VDA-TurningOff' }
+            Should -Invoke Write-EventLogSafe -Times 1 -Exactly -ParameterFilter {
+                $EventId -eq 112 -and $Message -match 'Erfolgreich gestartet: 1' -and $Message -match 'Fehler: 1'
+            }
+        }
+
+        It "Loggt Event 126 bei Abfragefehler, liefert 1 und prüft die nächste Gruppe weiter" {
+            $result = Invoke-CitrixRebootCheck -DesktopGroup 'DG-Fehler', 'DG-A' -ErrorAction SilentlyContinue -WarningAction SilentlyContinue
+
+            $result | Should -Be 1
+            Should -Invoke Write-EventLogSafe -Times 1 -Exactly -ParameterFilter { $EventId -eq 126 -and $Message -match 'DG-Fehler' }
+            Should -Invoke New-BrokerHostingPowerAction -Times 2 -Exactly
+        }
+
+        It "Warnt mit Event 120 bei leerer Gruppe und liefert 0" {
+            $result = Invoke-CitrixRebootCheck -DesktopGroup 'DG-Leer' -WarningAction SilentlyContinue
+
+            $result | Should -Be 0
+            Should -Invoke Write-EventLogSafe -Times 1 -Exactly -ParameterFilter { $EventId -eq 120 -and $EntryType -eq 'Warning' }
+            Should -Invoke New-BrokerHostingPowerAction -Times 0 -Exactly
+        }
+
+        It "Liefert genau einen Rückgabewert (keine Ausgabe-Verschmutzung)" {
+            $result = @(Invoke-CitrixRebootCheck -DesktopGroup 'DG-A')
+
+            $result.Count | Should -Be 1
+            $result[0] | Should -BeOfType [int]
+        }
+    }
+}

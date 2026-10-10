@@ -150,13 +150,20 @@ Die Skriptdatei ist als UTF-8 **mit BOM** gespeichert, damit Windows PowerShell 
 
 ## Tests
 
-Das Projekt verwendet [Pester](https://pester.dev/) für Unit-Tests.
+Das Projekt verwendet [Pester](https://pester.dev/) 5 für Unit-Tests (73 Tests, ca. 92 % Code Coverage).
+Neben statischen Prüfungen des Skripttexts gibt es Verhaltenstests: Das Skript wird per Dot-Sourcing
+geladen, die Citrix-Cmdlets (`Get-BrokerDesktop`, `New-BrokerHostingPowerAction`) und das Event Log
+werden gemockt. Eine Citrix-Umgebung ist für die Tests nicht nötig. Die Tests laufen unter
+Windows PowerShell 5.1 und PowerShell 7.
 
 ### Pester installieren
 
 ```powershell
-Install-Module -Name Pester -Force -SkipPublisherCheck
+Install-Module -Name Pester -MinimumVersion 5.0 -Force -SkipPublisherCheck
 ```
+
+Windows PowerShell 5.1 bringt Pester 3.4 mit. Falls Version 3.4 geladen wird, vorher
+`Import-Module Pester -MinimumVersion 5.0` ausführen.
 
 ### Tests ausführen
 
@@ -168,7 +175,10 @@ Invoke-Pester
 Invoke-Pester -Output Detailed
 
 # Code Coverage Report erstellen
-Invoke-Pester -CodeCoverage .\citrix_reboot_check.ps1
+$config = New-PesterConfiguration
+$config.CodeCoverage.Enabled = $true
+$config.CodeCoverage.Path = '.\citrix_reboot_check.ps1'
+Invoke-Pester -Configuration $config
 ```
 
 ## Fehlerbehandlung

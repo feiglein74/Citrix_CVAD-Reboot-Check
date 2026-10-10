@@ -16,6 +16,11 @@ und dieses Projekt folgt [Semantic Versioning](https://semver.org/lang/de/).
 - Hauptprogramm wird beim Dot-Sourcing übersprungen (Voraussetzung für Mock-Tests)
 - Summary wird bei `-Verbose` nur noch einmal statt doppelt ausgegeben
 
+### Tests
+- Verhaltenstests mit Pester-Mocks für alle Funktionen (Citrix-Cmdlets, Event Log):
+  Startlogik, Wartungsmodus, Fehlerzählung, Exit Codes, Summary, Event IDs
+- 73 Tests, ca. 92 % Code Coverage, lauffähig unter PowerShell 5.1 und 7
+
 ### Behoben
 - Skriptdateien als UTF-8 mit BOM gespeichert. Ohne BOM las Windows PowerShell 5.1 die Datei
   als ANSI, wodurch Umlaute in Ausgaben und Event-Log-Meldungen verstümmelt wurden (seit 2.0.0)
