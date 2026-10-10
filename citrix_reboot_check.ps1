@@ -11,10 +11,10 @@
     Zeigt detaillierte Ausgaben während der Ausführung
 
 .NOTES
-    Version:        2.0.0
+    Version:        2.1.0
     Autor:          ACP Group AG
     Erstelldatum:   2024-11-28
-    Änderungsdatum: 2025-11-10
+    Änderungsdatum: 2026-10-10
 
 .LINK
     Siehe CHANGELOG.md für detaillierte Versionshistorie
@@ -24,7 +24,7 @@
 param()
 
 # Skript-Version
-$ScriptVersion = "2.0.0"
+$ScriptVersion = "2.1.0"
 
 Write-Verbose "Citrix Reboot Check Script v$ScriptVersion wird gestartet..."
 
@@ -54,7 +54,7 @@ $Global:DESKTOPGROUP = @("DG-TS2019","DG-TS2016-Sage")
 try {
     $Global:EventLog = New-Object -type System.Diagnostics.Eventlog -argumentlist Application
     $Global:EventLog.Source = "Citrix Reboot Check Script"
-    $EventLog.WriteEntry("Starting scheduled task Citrix Post-Reboot Check Script v$ScriptVersion.","Information","111")
+    $EventLog.WriteEntry("Starting scheduled task Citrix Post-Reboot Check Script v$ScriptVersion.","Information",111)
 }
 catch {
     Write-Warning "Event Log konnte nicht initialisiert werden: $_. Skript wird ohne Event Log-Unterstützung fortgesetzt."
@@ -66,10 +66,10 @@ function Write-EventLogSafe {
     param(
         [string]$Message,
         [string]$EntryType = "Information",
-        [string]$EventId = "100"
+        [int]$EventId = 100
     )
 
-    if ($Global:EventLog -ne $null) {
+    if ($null -ne $Global:EventLog) {
         try {
             $Global:EventLog.WriteEntry($Message, $EntryType, $EventId)
         }
@@ -87,7 +87,7 @@ $FinalCheckDown =
 
         if ([string]::IsNullOrWhiteSpace($member)) {
             Write-Warning "Ungültiger Maschinenname übergeben"
-            return
+            return $false
         }
 
         function FinalStart
@@ -95,16 +95,18 @@ $FinalCheckDown =
             param([string]$machineName)
 
             $message = "Host $machineName is Offline. Start will be initiated!"
-            Write-EventLogSafe -Message $message -EventId "124"
+            Write-EventLogSafe -Message $message -EventId 124
 
             try {
-                New-BrokerHostingPowerAction -MachineName $machineName -Action TurnOn -ErrorAction Stop
+                New-BrokerHostingPowerAction -MachineName $machineName -Action TurnOn -ErrorAction Stop | Out-Null
                 Write-Verbose "Power-On Aktion erfolgreich für $machineName"
+                return $true
             }
             catch {
                 $errorMsg = "Fehler beim Starten von ${machineName}: $_"
-                Write-EventLogSafe -Message $errorMsg -EntryType "Error" -EventId "125"
+                Write-EventLogSafe -Message $errorMsg -EntryType "Error" -EventId 125
                 Write-Error $errorMsg
+                return $false
             }
         }
 
@@ -125,7 +127,7 @@ $FinalCheckOK =
             param([string]$machineName)
 
             $message = "Host: $machineName is running."
-            Write-EventLogSafe -Message $message -EventId "123"
+            Write-EventLogSafe -Message $message -EventId 123
         }
 
         FinalRunning $member
@@ -153,7 +155,7 @@ foreach ($desktopgroup in $GLOBAL:DESKTOPGROUP)
         if ($desktopgroupmember.Count -eq 0) {
             $warnMsg = "Keine Maschinen in Desktop-Gruppe '$desktopgroup' gefunden (oder alle im Wartungsmodus)"
             Write-Warning $warnMsg
-            Write-EventLogSafe -Message $warnMsg -EntryType "Warning" -EventId "120"
+            Write-EventLogSafe -Message $warnMsg -EntryType "Warning" -EventId 120
             continue
         }
 
@@ -163,16 +165,15 @@ foreach ($desktopgroup in $GLOBAL:DESKTOPGROUP)
         # Prüfung bzgl laufender VMs
         foreach ($member in $desktopgroupmember)
         {
-            if ($member.PowerState -match "Off")
+            if ($member.PowerState -in @('Off', 'TurningOff'))
             {
                 $machinesOffline++
-                try {
-                    Invoke-Command -ScriptBlock $FinalCheckDown -ArgumentList $member.MachineName
+                $started = Invoke-Command -ScriptBlock $FinalCheckDown -ArgumentList $member.MachineName
+                if ($started -eq $true) {
                     $machinesStarted++
                 }
-                catch {
+                else {
                     $errors++
-                    Write-Error "Fehler beim Verarbeiten von $($member.MachineName): $_"
                 }
             }
             else
@@ -186,7 +187,7 @@ foreach ($desktopgroup in $GLOBAL:DESKTOPGROUP)
         $errors++
         $errorMsg = "Fehler beim Abfragen der Desktop-Gruppe '${desktopgroup}': $_"
         Write-Error $errorMsg
-        Write-EventLogSafe -Message $errorMsg -EntryType "Error" -EventId "126"
+        Write-EventLogSafe -Message $errorMsg -EntryType "Error" -EventId 126
     }
 }
 
@@ -202,7 +203,7 @@ Gesamt-Maschinen geprüft: $totalMachines
 "@
 
 Write-Verbose $summaryMsg
-Write-EventLogSafe -Message $summaryMsg -EventId "112"
+Write-EventLogSafe -Message $summaryMsg -EventId 112
 
 # Exit Code basierend auf Ergebnissen
 if ($errors -gt 0) {

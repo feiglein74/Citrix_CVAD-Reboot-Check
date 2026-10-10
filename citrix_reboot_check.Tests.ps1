@@ -129,7 +129,7 @@ Describe "citrix_reboot_check.ps1 - Funktionen" {
 
         It "Hat EventId Parameter mit Default" {
             $content = Get-Content $scriptPath -Raw
-            $content | Should -Match '\[string\]\$EventId\s*=\s*"100"'
+            $content | Should -Match '\[int\]\$EventId\s*=\s*100'
         }
     }
 
@@ -163,37 +163,37 @@ Describe "citrix_reboot_check.ps1 - Event IDs" {
 
         It "Verwendet Event ID 111 für Start" {
             $content = Get-Content $scriptPath -Raw
-            $content | Should -Match '"111"'
+            $content | Should -Match '"Information",\s*111\)'
         }
 
         It "Verwendet Event ID 112 für Ende/Summary" {
             $content = Get-Content $scriptPath -Raw
-            $content | Should -Match '"112"'
+            $content | Should -Match '-EventId 112\b'
         }
 
         It "Verwendet Event ID 120 für Warnungen" {
             $content = Get-Content $scriptPath -Raw
-            $content | Should -Match '"120"'
+            $content | Should -Match '-EventId 120\b'
         }
 
         It "Verwendet Event ID 123 für Maschine läuft" {
             $content = Get-Content $scriptPath -Raw
-            $content | Should -Match '"123"'
+            $content | Should -Match '-EventId 123\b'
         }
 
         It "Verwendet Event ID 124 für Maschine offline" {
             $content = Get-Content $scriptPath -Raw
-            $content | Should -Match '"124"'
+            $content | Should -Match '-EventId 124\b'
         }
 
         It "Verwendet Event ID 125 für Start-Fehler" {
             $content = Get-Content $scriptPath -Raw
-            $content | Should -Match '"125"'
+            $content | Should -Match '-EventId 125\b'
         }
 
         It "Verwendet Event ID 126 für Abfrage-Fehler" {
             $content = Get-Content $scriptPath -Raw
-            $content | Should -Match '"126"'
+            $content | Should -Match '-EventId 126\b'
         }
     }
 }
@@ -322,6 +322,36 @@ Describe "citrix_reboot_check.ps1 - Best Practices" {
         It "Verwendet Write-Warning für Warnungen" {
             $content = Get-Content $scriptPath -Raw
             $content | Should -Match 'Write-Warning'
+        }
+
+        It "Vergleicht PowerState exakt statt mit -match" {
+            $content = Get-Content $scriptPath -Raw
+            $content | Should -Match "\.PowerState\s+-in\s+@\('Off',\s*'TurningOff'\)"
+            $content | Should -Not -Match '\.PowerState\s+-match'
+        }
+
+        It "Steht `$null links bei Vergleichen" {
+            $content = Get-Content $scriptPath -Raw
+            $content | Should -Not -Match '-ne\s+\$null'
+        }
+    }
+
+    Context "Start-Ergebnis" {
+
+        It "FinalStart liefert Erfolg/Misserfolg zurück" {
+            $content = Get-Content $scriptPath -Raw
+            $content | Should -Match 'return \$true'
+            $content | Should -Match 'return \$false'
+        }
+
+        It "Unterdrückt Ausgabe von New-BrokerHostingPowerAction" {
+            $content = Get-Content $scriptPath -Raw
+            $content | Should -Match 'New-BrokerHostingPowerAction.*\|\s*Out-Null'
+        }
+
+        It "Zählt machinesStarted nur bei Erfolg" {
+            $content = Get-Content $scriptPath -Raw
+            $content | Should -Match 'if \(\$started -eq \$true\)\s*\{\s*\$machinesStarted\+\+'
         }
     }
 }

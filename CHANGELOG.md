@@ -5,6 +5,22 @@ Alle nennenswerten Änderungen an diesem Projekt werden in dieser Datei dokument
 Das Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.0.0/),
 und dieses Projekt folgt [Semantic Versioning](https://semver.org/lang/de/).
 
+## [2.1.0] - 2026-10-10
+
+### Behoben
+- `machinesStarted` wurde auch bei fehlgeschlagenem Start hochgezählt. `FinalStart` liefert jetzt
+  `$true`/`$false` zurück; fehlgeschlagene Starts werden als Fehler gezählt und führen zu Exit Code 1
+- Ausgabe von `New-BrokerHostingPowerAction` wird unterdrückt, damit sie das Ergebnis nicht verfälscht
+
+### Geändert
+- PowerState-Vergleich exakt (`-in @('Off', 'TurningOff')`) statt `-match "Off"`
+- Event IDs als `[int]` statt als String
+- `$null`-Vergleich auf die linke Seite verschoben (PowerShell Best Practice)
+
+### Tests
+- Event-ID-Tests an Integer-Format angepasst
+- Neue Tests für PowerState-Vergleich, `$null`-Vergleich und Start-Ergebnis
+
 ## [2.0.0] - 2025-11-10
 
 ### Hinzugefügt

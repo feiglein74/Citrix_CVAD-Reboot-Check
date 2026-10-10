@@ -1,7 +1,7 @@
 # TODO - Verbesserungen für Citrix-RebootCheck
 
 Dokumentiert am: 2026-01-21
-Aktuelle Version: 2.0.0
+Aktuelle Version: 2.1.0
 Gesamtbewertung: 7/10
 
 ---
@@ -48,17 +48,17 @@ Gesamtbewertung: 7/10
 
 ### Priorität 1 - Niedrig (Quick Wins)
 
-- [ ] **PowerState-Vergleich korrigieren** (Zeile 166)
+- [x] **PowerState-Vergleich korrigieren** ✅ (2.1.0) (Zeile 166)
   - Aktuell: `-match "Off"` ist fragil
   - Besser: `-eq 'Off' -or -eq 'TurningOff'` für exakten Vergleich
   - Risiko: Ungewollte Matches bei ähnlichen Zuständen
 
-- [ ] **$null-Vergleich umdrehen** (Zeile 72)
+- [x] **$null-Vergleich umdrehen** ✅ (2.1.0) (Zeile 72)
   - Aktuell: `$Global:EventLog -ne $null`
   - Besser: `$null -ne $Global:EventLog`
   - Grund: PowerShell Best Practice für $null-Vergleiche
 
-- [ ] **Event ID Datentyp ändern** (Zeile 69)
+- [x] **Event ID Datentyp ändern** ✅ (2.1.0) (Zeile 69)
   - Aktuell: `[string]$EventId = "100"`
   - Besser: `[int]$EventId = 100`
   - Grund: Event IDs sind numerisch
@@ -67,7 +67,7 @@ Gesamtbewertung: 7/10
 
 ### Priorität 2 - Mittel (Strukturelle Verbesserungen)
 
-- [ ] **machinesStarted Logik korrigieren** (Zeilen 168-176)
+- [x] **machinesStarted Logik korrigieren** ✅ (2.1.0) (Zeilen 168-176)
   - Problem: Zähler wird erhöht, obwohl interner Fehler im ScriptBlock auftreten kann
   - Lösung: Rückgabewert aus ScriptBlock auswerten oder Exception weiterleiten
   - Code-Stelle:
