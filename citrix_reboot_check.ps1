@@ -7,11 +7,17 @@
     Dieses Skript prüft konfigurierte Citrix Desktop Delivery Groups auf offline Maschinen
     und initiiert automatisch deren Start. Alle Aktivitäten werden im Windows Event Log protokolliert.
 
+.PARAMETER DesktopGroup
+    Namen der zu prüfenden Citrix Delivery Groups (Pflichtparameter)
+
 .PARAMETER Verbose
     Zeigt detaillierte Ausgaben während der Ausführung
 
+.EXAMPLE
+    .\citrix_reboot_check.ps1 -DesktopGroup "DG-Example1","DG-Example2" -Verbose
+
 .NOTES
-    Version:        2.1.0
+    Version:        3.0.0
     Autor:          Sascha Feig
     Erstelldatum:   2024-11-28
     Änderungsdatum: 2026-10-10
@@ -21,10 +27,14 @@
 #>
 
 [CmdletBinding()]
-param()
+param(
+    [Parameter(Mandatory = $true)]
+    [ValidateNotNullOrEmpty()]
+    [string[]]$DesktopGroup
+)
 
 # Skript-Version
-$ScriptVersion = "2.1.0"
+$ScriptVersion = "3.0.0"
 
 Write-Verbose "Citrix Reboot Check Script v$ScriptVersion wird gestartet..."
 
@@ -46,9 +56,6 @@ foreach ($cmdlet in $requiredCmdlets) {
         exit 1
     }
 }
-
-# Festlegen der zu prüfenden Bereitstellungsgruppen
-$Global:DESKTOPGROUP = @("DG-Example1","DG-Example2")
 
 # Eventlog-Einträge vorbereiten mit Fehlerbehandlung
 try {
@@ -142,7 +149,7 @@ $machinesStarted = 0
 $errors = 0
 
 # Schleife um alle Bereitstellungsgruppen abzuarbeiten
-foreach ($desktopgroup in $GLOBAL:DESKTOPGROUP)
+foreach ($desktopgroup in $DesktopGroup)
 {
     Write-Verbose "Verarbeite Desktop-Gruppe: $desktopgroup"
 
@@ -194,7 +201,7 @@ foreach ($desktopgroup in $GLOBAL:DESKTOPGROUP)
 # Abschluss-Summary erstellen und loggen
 $summaryMsg = @"
 Citrix Reboot Check Script v$ScriptVersion abgeschlossen.
-Geprüfte Desktop-Gruppen: $($GLOBAL:DESKTOPGROUP.Count)
+Geprüfte Desktop-Gruppen: $($DesktopGroup.Count)
 Gesamt-Maschinen geprüft: $totalMachines
   - Online: $machinesOnline
   - Offline (Start initiiert): $machinesOffline

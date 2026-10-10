@@ -1,7 +1,7 @@
 # TODO - Verbesserungen für Citrix-RebootCheck
 
 Dokumentiert am: 2026-01-21
-Aktuelle Version: 2.1.0
+Aktuelle Version: 3.0.0
 Gesamtbewertung: 7/10
 
 ---
@@ -90,8 +90,8 @@ Gesamtbewertung: 7/10
     }
     ```
 
-- [ ] **Globale Variablen entfernen** (Zeilen 51, 55-56)
-  - Betrifft: `$Global:DESKTOPGROUP`, `$Global:EventLog`
+- [ ] **Globale Variablen entfernen** (Zeilen 55-56)
+  - Betrifft: `$Global:EventLog` (`$Global:DESKTOPGROUP` in 3.0.0 durch Parameter ersetzt ✅)
   - Besser: `$script:` Scope oder Parameter
   - Grund: Vermeidung von Scope-Verschmutzung
 
@@ -100,7 +100,7 @@ Gesamtbewertung: 7/10
   - Besser: `& $FinalCheckDown` oder direkte Funktionsaufrufe
   - Grund: Invoke-Command für lokale ScriptBlocks ist unnötig
 
-- [ ] **Externe Konfigurationsdatei einführen** (Zeile 51)
+- [x] **Externe Konfigurationsdatei einführen** ✅ (3.0.0 als Parameter `-DesktopGroup`, keine Config-Datei)
   - Aktuell: Desktop-Gruppen hardcoded im Skript
   - Besser: JSON/PSD1 Konfigurationsdatei oder Parameter
   - Beispiel:

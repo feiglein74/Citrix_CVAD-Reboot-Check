@@ -5,6 +5,15 @@ Alle nennenswerten Änderungen an diesem Projekt werden in dieser Datei dokument
 Das Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.0.0/),
 und dieses Projekt folgt [Semantic Versioning](https://semver.org/lang/de/).
 
+## [3.0.0] - 2026-10-10
+
+### Geändert (Breaking)
+- Desktop-Gruppen werden über den Pflichtparameter `-DesktopGroup` übergeben statt fest im Skript
+  (`$Global:DESKTOPGROUP` entfällt). Bestehende geplante Aufgaben müssen den Parameter ergänzen.
+
+### Dokumentation
+- README: Aufruf mit `-DesktopGroup`, geplante Aufgabe mit `-Command` (String-Array-Übergabe)
+
 ## [2.1.0] - 2026-10-10
 
 ### Behoben

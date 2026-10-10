@@ -72,15 +72,20 @@ Describe "citrix_reboot_check.ps1 - Skript-Grundlagen" {
 
     Context "Konfiguration" {
 
-        It "Desktop-Gruppen sind definiert" {
-            $content = Get-Content $scriptPath -Raw
-            $content | Should -Match '\$Global:DESKTOPGROUP'
+        It "Hat Pflichtparameter DesktopGroup vom Typ string[]" {
+            $param = (Get-Command $scriptPath).Parameters['DesktopGroup']
+            $param | Should -Not -BeNullOrEmpty
+            $param.ParameterType | Should -Be ([string[]])
+            $mandatory = $param.Attributes |
+                Where-Object { $_ -is [System.Management.Automation.ParameterAttribute] } |
+                ForEach-Object { $_.Mandatory }
+            $mandatory | Should -Contain $true
         }
 
-        It "Desktop-Gruppen enthalten erwartete Werte" {
+        It "Desktop-Gruppen sind nicht mehr hardcoded" {
             $content = Get-Content $scriptPath -Raw
-            $content | Should -Match 'DG-Example1'
-            $content | Should -Match 'DG-Example2'
+            $content | Should -Not -Match '\$Global:DESKTOPGROUP'
+            $content | Should -Match 'foreach \(\$desktopgroup in \$DesktopGroup\)'
         }
     }
 }

@@ -12,7 +12,7 @@ Every action is logged to the Windows **Application** event log (source
 Run with `-Verbose` (example with one configured Delivery Group, placeholder machine names):
 
 ```text
-VERBOSE: Citrix Reboot Check Script v2.1.0 wird gestartet...
+VERBOSE: Citrix Reboot Check Script v3.0.0 wird gestartet...
 VERBOSE: Citrix Snap-ins erfolgreich geladen
 VERBOSE: Verarbeite Desktop-Gruppe: DG-Example
 VERBOSE: Gefundene Maschinen in DG-Example: 3
@@ -20,7 +20,7 @@ VERBOSE: Host: VDA01 is running.
 VERBOSE: Host VDA02 is Offline. Start will be initiated!
 VERBOSE: Power-On Aktion erfolgreich für VDA02
 VERBOSE: Host: VDA03 is running.
-VERBOSE: Citrix Reboot Check Script v2.1.0 abgeschlossen.
+VERBOSE: Citrix Reboot Check Script v3.0.0 abgeschlossen.
 Geprüfte Desktop-Gruppen: 1
 Gesamt-Maschinen geprüft: 3
   - Online: 2
@@ -41,16 +41,14 @@ an account with Citrix admin rights.
 # 1. Register the event log source once (elevated)
 New-EventLog -LogName Application -Source "Citrix Reboot Check Script"
 
-# 2. Set your Delivery Groups in citrix_reboot_check.ps1
-#    $Global:DESKTOPGROUP = @("DG-Example1","DG-Example2")
+# 2. Test run with your Delivery Groups
+.\citrix_reboot_check.ps1 -DesktopGroup "DG-Example1","DG-Example2" -Verbose
 
-# 3. Test run
-.\citrix_reboot_check.ps1 -Verbose
-
-# 4. Schedule it (adjust time to your reboot schedule)
+# 3. Schedule it (adjust time to your reboot schedule)
+#    -Command instead of -File, because -File cannot pass string arrays
 $cred = Get-Credential   # account with Citrix admin rights
 $action  = New-ScheduledTaskAction -Execute "powershell.exe" `
-    -Argument '-NoProfile -ExecutionPolicy Bypass -File "C:\Scripts\citrix_reboot_check.ps1"'
+    -Argument '-NoProfile -NonInteractive -ExecutionPolicy Bypass -Command "& ''C:\Scripts\citrix_reboot_check.ps1'' -DesktopGroup ''DG-Example1'',''DG-Example2''; exit $LASTEXITCODE"'
 $trigger = New-ScheduledTaskTrigger -Daily -At 05:30
 Register-ScheduledTask -TaskName "Citrix Reboot Check" -Action $action -Trigger $trigger `
     -User $cred.UserName -Password $cred.GetNetworkCredential().Password -RunLevel Highest
@@ -66,7 +64,7 @@ License: [MIT](LICENSE)
 
 Überwacht Citrix Desktop Delivery Groups und startet automatisch offline Maschinen.
 
-**Version:** 2.1.0
+**Version:** 3.0.0
 
 ## Übersicht
 
@@ -74,7 +72,7 @@ Dieses Repository enthält ein PowerShell-Skript, das Citrix Desktop Delivery Gr
 
 ## Funktionen
 
-- Überwacht spezifische Citrix Desktop Delivery Groups (DG-Example1, DG-Example2)
+- Überwacht die per `-DesktopGroup` übergebenen Citrix Desktop Delivery Groups
 - Prüft den Betriebszustand aller Maschinen, die sich nicht im Wartungsmodus befinden
 - Initiiert automatisch eine Einschaltaktion für Maschinen, die offline sind
 - Protokolliert alle Aktivitäten im Windows-Ereignisprotokoll unter der Quelle "Citrix Reboot Check Script"
@@ -98,18 +96,19 @@ Dieses Repository enthält ein PowerShell-Skript, das Citrix Desktop Delivery Gr
 
 ```powershell
 # Skript direkt ausführen
-.\citrix_reboot_check.ps1
+.\citrix_reboot_check.ps1 -DesktopGroup "DG-Example1","DG-Example2"
 
 # Mit detaillierter Ausgabe (empfohlen für Debugging)
-.\citrix_reboot_check.ps1 -Verbose
+.\citrix_reboot_check.ps1 -DesktopGroup "DG-Example1","DG-Example2" -Verbose
 ```
 
 ## Konfiguration
 
-Zu überwachende Desktop-Gruppen sind in `$Global:DESKTOPGROUP` bei `citrix_reboot_check.ps1:51` definiert:
+Die zu überwachenden Desktop-Gruppen werden über den Pflichtparameter `-DesktopGroup` übergeben.
+In der geplanten Aufgabe `-Command` statt `-File` verwenden, da `-File` keine String-Arrays übergeben kann:
 
-```powershell
-$Global:DESKTOPGROUP = @("DG-Example1","DG-Example2")
+```text
+powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass -Command "& 'C:\Scripts\citrix_reboot_check.ps1' -DesktopGroup 'DG-Example1','DG-Example2'; exit $LASTEXITCODE"
 ```
 
 ## Event-IDs
