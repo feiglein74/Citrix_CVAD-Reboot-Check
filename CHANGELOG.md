@@ -16,6 +16,9 @@ und dieses Projekt folgt [Semantic Versioning](https://semver.org/lang/de/).
 - Hauptprogramm wird beim Dot-Sourcing übersprungen (Voraussetzung für Mock-Tests)
 - Summary wird bei `-Verbose` nur noch einmal statt doppelt ausgegeben
 
+### Dokumentation
+- DESIGN-PRINCIPLES.md mit Leitprinzipien, Design-Entscheidungen und Merksätzen
+
 ### Tests
 - Verhaltenstests mit Pester-Mocks für alle Funktionen (Citrix-Cmdlets, Event Log):
   Startlogik, Wartungsmodus, Fehlerzählung, Exit Codes, Summary, Event IDs

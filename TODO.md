@@ -19,8 +19,8 @@ Gesamtbewertung: 7/10
 - [x] **LICENSE erstellen** ✅
   - Erledigt: 2026-10-10 (MIT)
 
-- [ ] **DESIGN-PRINCIPLES.md erstellen**
-  - Status: ❌ Fehlt komplett
+- [x] **DESIGN-PRINCIPLES.md erstellen** ✅
+  - Erledigt: 2026-10-10
   - Soll enthalten: Leitprinzipien, Design-Entscheidungen, Merksätze
 
 ### Sprach-Verstöße

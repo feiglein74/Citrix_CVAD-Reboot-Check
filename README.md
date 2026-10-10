@@ -198,6 +198,11 @@ Das Skript verfügt über umfassende Fehlerbehandlung:
 | `Get-BrokerDesktop` | Ruft Maschineninformationen aus Desktop-Gruppen ab |
 | `New-BrokerHostingPowerAction` | Initiiert Einschaltaktionen für Maschinen |
 
+## Design-Prinzipien
+
+Leitlinien und bewusste Entscheidungen (z.B. Wartungsmodus, Event-IDs, Exit Codes, UTF-8 mit BOM)
+stehen in [DESIGN-PRINCIPLES.md](DESIGN-PRINCIPLES.md).
+
 ## Versionierung
 
 Das Projekt folgt [Semantic Versioning](https://semver.org/lang/de/) (MAJOR.MINOR.PATCH).
