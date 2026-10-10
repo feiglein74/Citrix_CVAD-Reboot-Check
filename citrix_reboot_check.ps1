@@ -12,7 +12,7 @@
 
 .NOTES
     Version:        2.1.0
-    Autor:          ACP Group AG
+    Autor:          ACP IT Solutions AG
     Erstelldatum:   2024-11-28
     Änderungsdatum: 2026-10-10
 

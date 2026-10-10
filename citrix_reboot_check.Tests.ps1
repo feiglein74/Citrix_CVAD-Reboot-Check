@@ -13,7 +13,7 @@
 
 .NOTES
     Pester Version: 5.x
-    Autor: ACP Group AG
+    Autor: ACP IT Solutions AG
     Datum: 2025-11-10
 #>
 
