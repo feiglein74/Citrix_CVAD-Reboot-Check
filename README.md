@@ -190,4 +190,4 @@ Siehe [CHANGELOG.md](CHANGELOG.md) für die vollständige Versionshistorie.
 
 ## Lizenz
 
-MIT – siehe [LICENSE](LICENSE). © ACP IT Solutions AG
+MIT – siehe [LICENSE](LICENSE). © Sascha Feig
