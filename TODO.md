@@ -37,7 +37,7 @@ Gesamtbewertung: 7/10
 
 ### Aufräumen
 
-- [ ] **citrix_reboot_check.ps1.zip entfernen oder in .gitignore**
+- [x] **citrix_reboot_check.ps1.zip entfernen oder in .gitignore** ✅ (Datei nicht mehr vorhanden, `*.zip` in .gitignore)
   - Build-Artefakte gehören nicht ins Repository
   - Entweder löschen oder via .gitignore ausschließen
 
