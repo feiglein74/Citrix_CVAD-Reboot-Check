@@ -1,7 +1,7 @@
 # TODO - Verbesserungen für Citrix-RebootCheck
 
 Dokumentiert am: 2026-01-21
-Aktuelle Version: 3.1.0
+Aktuelle Version: 3.1.1
 Gesamtbewertung: 7/10
 
 ---

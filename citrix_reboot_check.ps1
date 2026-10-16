@@ -1,9 +1,37 @@
-﻿#Requires -Version 5.1
+﻿<#PSScriptInfo
+
+.VERSION 3.1.1
+
+.GUID b5220b73-8f76-473d-ac22-b7be21b904c4
+
+.AUTHOR Sascha Feig
+
+.COPYRIGHT (c) 2024-2026 Sascha Feig. MIT License.
+
+.TAGS Citrix CVAD XenDesktop VirtualAppsAndDesktops VDA DeliveryGroup DeliveryController PowerOn ScheduledTask Windows
+
+.LICENSEURI https://github.com/feiglein74/Citrix_CVAD-Reboot-Check/blob/master/LICENSE
+
+.PROJECTURI https://github.com/feiglein74/Citrix_CVAD-Reboot-Check
+
+.RELEASENOTES
+See https://github.com/feiglein74/Citrix_CVAD-Reboot-Check/blob/master/CHANGELOG.md
+
+#>
+
+#Requires -Version 5.1
+
 <#
 .SYNOPSIS
     Citrix Reboot Check Script - Überwacht Citrix Desktop-Gruppen und startet offline Maschinen
 
 .DESCRIPTION
+    Checks Citrix Virtual Apps and Desktops (CVAD / XenDesktop) Delivery Groups for VDA machines
+    that are powered off and powers them on. Machines in maintenance mode are skipped. Every action
+    is written to the Windows Application event log. Intended as a scheduled task on the Delivery
+    Controller after the nightly reboot window. Requires Windows PowerShell 5.1 and the Citrix
+    Broker snap-ins.
+
     Dieses Skript prüft konfigurierte Citrix Desktop Delivery Groups auf offline Maschinen
     und initiiert automatisch deren Start. Alle Aktivitäten werden im Windows Event Log protokolliert.
 
@@ -20,10 +48,10 @@
     .\citrix_reboot_check.ps1 -DesktopGroup "DG-Example1","DG-Example2" -Verbose
 
 .NOTES
-    Version:        3.1.0
+    Version:        3.1.1
     Autor:          Sascha Feig
     Erstelldatum:   2024-11-28
-    Änderungsdatum: 2026-10-10
+    Änderungsdatum: 2026-10-16
 
 .LINK
     Siehe CHANGELOG.md für detaillierte Versionshistorie
@@ -37,7 +65,7 @@ param(
 )
 
 # Skript-Version
-$ScriptVersion = "3.1.0"
+$ScriptVersion = "3.1.1"
 
 # Event Log Objekt, wird von Initialize-EventLog gesetzt
 $script:EventLog = $null

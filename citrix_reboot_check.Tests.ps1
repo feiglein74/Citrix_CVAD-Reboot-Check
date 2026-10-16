@@ -64,9 +64,26 @@ Describe "citrix_reboot_check.ps1 - Skript-Grundlagen" {
             $content | Should -Match '\.NOTES'
         }
 
+        It "Comment-Based Help wird von PowerShell erkannt" {
+            # Bis 3.1.0 klebte #Requires direkt am Hilfeblock, Get-Help fand dadurch nichts
+            $ast = [System.Management.Automation.Language.Parser]::ParseFile($scriptPath, [ref]$null, [ref]$null)
+            $help = $ast.GetHelpContent()
+            $help | Should -Not -BeNullOrEmpty
+            $help.Synopsis | Should -Not -BeNullOrEmpty
+            $help.Description | Should -Not -BeNullOrEmpty
+        }
+
         It "Versionsnummer ist definiert" {
             $content = Get-Content $scriptPath -Raw
             $content | Should -Match '\$ScriptVersion\s*=\s*"[\d\.]+"'
+        }
+
+        It "PSScriptInfo ist gültig und Versionen stimmen überein" {
+            $info = Test-ScriptFileInfo -Path $scriptPath
+            $content = Get-Content $scriptPath -Raw
+            $null = $content -match '\$ScriptVersion\s*=\s*"([\d\.]+)"'
+            $info.Version.ToString() | Should -Be $Matches[1]
+            $content | Should -Match "Version:\s+$([regex]::Escape($Matches[1]))"
         }
     }
 
@@ -429,6 +446,8 @@ Describe "citrix_reboot_check.ps1 - Verhalten (Mock-Tests)" {
 
         It "Liefert `$false, wenn ein benötigtes Cmdlet fehlt" {
             Mock Add-PSSnapin { }
+            # Standard-Mock nötig: Pester 6 fällt bei nicht passendem Filter nicht mehr auf das echte Cmdlet zurück
+            Mock Get-Command { [PSCustomObject]@{ Name = $Name } }
             Mock Get-Command { $null } -ParameterFilter { $Name -eq 'New-BrokerHostingPowerAction' }
             Initialize-CitrixEnvironment -ErrorAction SilentlyContinue | Should -BeFalse
         }

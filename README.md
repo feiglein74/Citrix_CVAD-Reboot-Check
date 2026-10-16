@@ -1,5 +1,10 @@
 # Citrix CVAD Reboot Check
 
+[![Tests](https://github.com/feiglein74/Citrix_CVAD-Reboot-Check/actions/workflows/tests.yml/badge.svg)](https://github.com/feiglein74/Citrix_CVAD-Reboot-Check/actions/workflows/tests.yml)
+![PowerShell](https://img.shields.io/badge/PowerShell-5.1-5391FE?logo=powershell&logoColor=white)
+![Platform](https://img.shields.io/badge/platform-Citrix%20Delivery%20Controller%20%28Windows%29-0078D6)
+[![License](https://img.shields.io/github/license/feiglein74/Citrix_CVAD-Reboot-Check)](LICENSE)
+
 PowerShell script for **Citrix Virtual Apps and Desktops (CVAD / XenDesktop)** that checks
 Delivery Groups for offline VDA machines and powers them on automatically — typically run as a
 scheduled task on the Delivery Controller after the nightly reboot window.
@@ -12,7 +17,7 @@ Every action is logged to the Windows **Application** event log (source
 Run with `-Verbose` (example with one configured Delivery Group, placeholder machine names):
 
 ```text
-VERBOSE: Citrix Reboot Check Script v3.1.0 wird gestartet...
+VERBOSE: Citrix Reboot Check Script v3.1.1 wird gestartet...
 VERBOSE: Citrix Snap-ins erfolgreich geladen
 VERBOSE: Verarbeite Desktop-Gruppe: DG-Example
 VERBOSE: Gefundene Maschinen in DG-Example: 3
@@ -20,7 +25,7 @@ VERBOSE: Host: VDA01 is running.
 VERBOSE: Host VDA02 is Offline. Start will be initiated!
 VERBOSE: Power-On Aktion erfolgreich für VDA02
 VERBOSE: Host: VDA03 is running.
-VERBOSE: Citrix Reboot Check Script v3.1.0 abgeschlossen.
+VERBOSE: Citrix Reboot Check Script v3.1.1 abgeschlossen.
 Geprüfte Desktop-Gruppen: 1
 Gesamt-Maschinen geprüft: 3
   - Online: 2
@@ -64,7 +69,7 @@ License: [MIT](LICENSE)
 
 Überwacht Citrix Desktop Delivery Groups und startet automatisch offline Maschinen.
 
-**Version:** 3.1.0
+**Version:** 3.1.1
 
 ## Übersicht
 
@@ -150,11 +155,12 @@ Die Skriptdatei ist als UTF-8 **mit BOM** gespeichert, damit Windows PowerShell 
 
 ## Tests
 
-Das Projekt verwendet [Pester](https://pester.dev/) 5 für Unit-Tests (73 Tests, ca. 92 % Code Coverage).
+Das Projekt verwendet [Pester](https://pester.dev/) 5 oder 6 für Unit-Tests (75 Tests, ca. 92 % Code Coverage).
 Neben statischen Prüfungen des Skripttexts gibt es Verhaltenstests: Das Skript wird per Dot-Sourcing
 geladen, die Citrix-Cmdlets (`Get-BrokerDesktop`, `New-BrokerHostingPowerAction`) und das Event Log
 werden gemockt. Eine Citrix-Umgebung ist für die Tests nicht nötig. Die Tests laufen unter
-Windows PowerShell 5.1 und PowerShell 7.
+Windows PowerShell 5.1 und PowerShell 7, bei jedem Push automatisch per GitHub Actions
+(`.github/workflows/tests.yml`).
 
 ### Pester installieren
 

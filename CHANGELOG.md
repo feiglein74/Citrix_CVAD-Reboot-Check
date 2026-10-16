@@ -5,6 +5,23 @@ Alle nennenswerten Änderungen an diesem Projekt werden in dieser Datei dokument
 Das Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.0.0/),
 und dieses Projekt folgt [Semantic Versioning](https://semver.org/lang/de/).
 
+## [3.1.1] - 2026-10-16
+
+### Hinzugefügt
+- `PSScriptInfo`-Kopf (Version, GUID, Autor, Tags, Projekt- und Lizenz-URL) für die
+  Veröffentlichung in der PowerShell Gallery; englische Beschreibung in `.DESCRIPTION`
+- GitHub-Actions-Workflow `tests.yml`: Pester-Tests unter Windows PowerShell 5.1 und PowerShell 7
+- README: Badges (Tests, PowerShell-Version, Plattform, Lizenz)
+
+### Behoben
+- `Get-Help .\citrix_reboot_check.ps1` fand keine Hilfe, weil `#Requires` ohne Leerzeile
+  direkt am Hilfeblock stand
+- Test für fehlendes Cmdlet schlug unter Pester 6 fehl (Standard-Mock für `Get-Command` ergänzt)
+
+### Tests
+- 75 Tests: neu Prüfung, dass die Hilfe erkannt wird, und dass `PSScriptInfo` gültig ist und
+  zur `$ScriptVersion` passt
+
 ## [3.1.0] - 2026-10-10
 
 ### Geändert
